@@ -3,73 +3,36 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 
-const orderRoutes =
-    require("./routes/orderRoutes");
-
-const kpiRoutes =
-    require("./routes/kpiRoutes");
-
+const orderRoutes = require("./routes/orderRoutes");
+const kpiRoutes = require("./routes/kpiRoutes");
 
 const app = express();
 
-
 // Middleware
-
 app.use(cors());
-
 app.use(express.json());
 
+// API Routes
+app.use("/api/orders", orderRoutes);
+app.use("/api/kpi", kpiRoutes);
 
-// Routes
+// Serve React frontend
+const frontendPath = path.join(__dirname, "..", "frontend", "dist");
 
-app.use(
-    "/api/orders",
-    orderRoutes
-);
+app.use(express.static(frontendPath));
 
-app.use(
-    "/api/kpi",
-    kpiRoutes
-);
+// React SPA fallback
+app.use((req, res, next) => {
+    if (req.path.startsWith("/api/")) {
+        return next();
+    }
 
-app.use(
-    express.static(
-        path.join(__dirname, "frontend", "dist")
-    )
-);
-
-// Health check
-
-app.get("/", (req, res) => {
-
-    res.json({
-        message: "O2C Backend API is running"
-    });
-
+    res.sendFile(path.join(frontendPath, "index.html"));
 });
-
 
 // Start server
-
-const PORT =
-    process.env.PORT || 8080;
-
+const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {
-
-    console.log(
-        `O2C Backend running on port ${PORT}`
-    );
-
-});
-
-app.get("*", (req, res) => {
-    res.sendFile(
-        path.join(
-            __dirname,
-            "frontend",
-            "dist",
-            "index.html"
-        )
-    );
+    console.log(`O2C Backend running on port ${PORT}`);
 });
